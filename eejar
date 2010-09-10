@@ -49,11 +49,15 @@ Options:
 Test outputs with
 -----------------
 
-Example is for package  'com.example.sampleproduct and artifact 'sampleproduct'
-'
+Example is for groupId 'com.example', artifact 'sampleproduct' and package  'com.example.sampleproduct'
+
+Run
+
+cd sampleproduct
+
 mvn package
 
-Then with a command similar to:
+Then issue a command similar to:
 
 java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
 
@@ -411,7 +415,7 @@ class EEJar
   end
   
   def initialize
-    @debug = true
+    @debug = false
     @starting_dir = Dir.getwd
     if @debug
       @starting_dir = File.join(@starting_dir,'debug')
