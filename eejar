@@ -188,7 +188,17 @@ POM_CONTENTS=<<POM_TEMPLATE
 </project>
 POM_TEMPLATE
 
-
+GIT_IGNORE_CONTENTS=<<GITIGNORE_TEMPLATE
+.DS_Store
+logs
+logs/*
+target
+target/*
+.idea/workspace.xml
+.idea/tasks.xml
+projectFilesBackup*
+projectFilesBackup*/*
+GITIGNORE_TEMPLATE
 
 class EEJar
   
@@ -280,7 +290,18 @@ class EEJar
   end
   
   def create_project_files
+    create_gitignore
     create_pom
+    create_placeholder_files
+    
+  end
+  
+  def create_gitignore
+    git_ignore_file_name = File.join(@starting_dir,@artifact_id,".gitignore")
+    debug("Creating #{git_ignore_file_name}")
+    File.open(git_ignore_file_name,'w') do |git_ignore_file|
+      git_ignore_file.puts GIT_IGNORE_CONTENTS
+    end
   end
   
   def create_pom
@@ -292,6 +313,11 @@ class EEJar
     File.open(pom_file_name,'w') do |pom_file|
       pom_file.puts pom
     end
+  end
+  
+  def create_placeholder_files
+    docs_placeholder_file_name = File.join(@starting_dir,@artifact_id,'docs','index.html')
+    FileUtils.touch(docs_placeholder_file_name)
   end
   
 end
