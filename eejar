@@ -99,9 +99,14 @@ PACKAGE_SPECIFIC_DIRECTORIES = %w{
   /src/test/java/[PACKAGE]
 }
 
-POM_PACKAGING='jar'
+EEPROPERTIES_FILE_NAMES=%w{defaults-ee.properties development-ee.properties test-ee.properties}
 
-POM_CONTENTS=<<POM_TEMPLATE
+
+
+POM_PACKAGING_JAR='jar'
+POM_PACKAGING=POM_PACKAGING_JAR
+
+POM_CONTENTS_JAR=<<POM_TEMPLATE_JAR
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -206,7 +211,7 @@ POM_CONTENTS=<<POM_TEMPLATE
 
     </dependencies>
 </project>
-POM_TEMPLATE
+POM_TEMPLATE_JAR
 
 GIT_IGNORE_CONTENTS=<<GITIGNORE_TEMPLATE
 .DS_Store
@@ -257,7 +262,8 @@ public class Sample {
         EEProperties.sLoadPackageConfiguration(Sample.class);
         Slf4jExt.sConfigureLogging(Sample.class,null,null);
       
-        System.out.println( "Hello World!" );
+        System.out.println( "Hello From " + Sample.class.getName() );
+        logger.debug("Log message from Sample");
     }
 }
 
@@ -307,6 +313,27 @@ public class SampleTest {
 }
 
 SAMPLE_JAVA_TEST_TEMPLATE
+
+LOG4J_DEFAULTS_CONTENTS=<<LOG4J_DEFAULTS_TEMPLATE
+log4j.appender.[PACKAGE].CONSOLE_APPENDER=org.apache.log4j.ConsoleAppender
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout=org.apache.log4j.PatternLayout
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t[%t]\t%m %n
+log4j.logger.[PACKAGE] = ERROR, [PACKAGE].CONSOLE_APPENDER
+LOG4J_DEFAULTS_TEMPLATE
+
+LOG4J_DEVELOPMENT_CONTENTS=<<LOG4J_DEVELOPMENT_TEMPLATE
+log4j.appender.[PACKAGE].CONSOLE_APPENDER=org.apache.log4j.ConsoleAppender
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout=org.apache.log4j.PatternLayout
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t[%t]\t%m %n
+log4j.logger.[PACKAGE] = TRACE, [PACKAGE].CONSOLE_APPENDER
+LOG4J_DEVELOPMENT_TEMPLATE
+
+LOG4J_TEST_CONTENTS=<<LOG4J_TEST_TEMPLATE
+log4j.appender.[PACKAGE].CONSOLE_APPENDER=org.apache.log4j.ConsoleAppender
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout=org.apache.log4j.PatternLayout
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t[%t]\t%m %n
+log4j.logger.[PACKAGE] = DEBUG, [PACKAGE].CONSOLE_APPENDER
+LOG4J_TEST_TEMPLATE
 
 
 class EEJar
@@ -402,6 +429,7 @@ class EEJar
     create_gitignore
     create_pom
     create_placeholder_files
+    create_configuration_files
     create_sample_files
   end
   
@@ -414,7 +442,7 @@ class EEJar
   end
   
   def create_pom
-    pom = POM_CONTENTS.gsub(/\[PACKAGE\]/,@package)
+    pom = POM_CONTENTS_JAR.gsub(/\[PACKAGE\]/,@package)
     pom = pom.gsub(/\[ARTIFACT_ID\]/,@artifact_id)
     pom = pom.gsub(/\[ARTIFACT_VERSION\]/,@artifact_version)
     pom_file_name = File.join(@starting_dir,@artifact_id,"pom.xml")
@@ -460,6 +488,31 @@ class EEJar
     end
   end
 
+  def create_configuration_files
+    #TODO defaults-ee.properties, development-ee.properties, test-ee.properties
+    #TODO log4j-defaults.properties, log4j-development.properties, log4j-test.properties
+    package_dir = @package.gsub(/\./,'/')
+    directory_prefix = File.join(@starting_dir,@artifact_id,'/src/main/resources',package_dir)
+    EEPROPERTIES_FILE_NAMES.each do |eeproperties_file_name|
+      eeproperties_full_file_name = File.join(directory_prefix,eeproperties_file_name)
+      debug("Creating #{eeproperties_full_file_name}")
+      FileUtils.touch(eeproperties_full_file_name)      
+    end
+    create_log4j_configuration_file('log4j-defaults.properties',LOG4J_DEFAULTS_CONTENTS)
+    create_log4j_configuration_file('log4j-development.properties',LOG4J_DEVELOPMENT_CONTENTS)
+    create_log4j_configuration_file('log4j-test.properties',LOG4J_TEST_CONTENTS)
+  end
+  
+  def create_log4j_configuration_file(name,contents)
+    package_dir = @package.gsub(/\./,'/')
+    directory_prefix = File.join(@starting_dir,@artifact_id,'/src/main/resources',package_dir)
+    contents = contents.gsub(/\[PACKAGE\]/,@package)
+    full_log4j_configuration_file = File.join(directory_prefix,name)
+    debug("Creating #{full_log4j_configuration_file}")
+    File.open(full_log4j_configuration_file,'w') do |file|
+      file.puts contents
+    end
+  end
   
 end
 
