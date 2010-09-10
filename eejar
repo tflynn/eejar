@@ -25,6 +25,9 @@ http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
 =end
 
 DESCRIPTION_TEXT=<<DESCRIPTION_TEXT_TEMPLATE
+Overview
+--------
+
 eejar is a script that will create a skeleton for a single JAR-based Maven Project.
 
 It uses the same concepts as a Maven archetype - groupID, artifactID and so on.
@@ -32,7 +35,8 @@ It uses the same concepts as a Maven archetype - groupID, artifactID and so on.
 In addition to the results of a suitable 'mvn archetype:generate' for the archetype 'maven-archetype-quickstart' (1.1),
 the script will add configuration and logging configuration based on EEProperties and Slf4jExt respsectively.
 
-To run:
+To run
+------
 
 ./eejar
 
@@ -42,15 +46,19 @@ Options:
 
 -q quiet mode - Disable this message
 
-Test outputs with:
+Test outputs with
+-----------------
 
+Example is for package  'com.example.sampleproduct and artifact 'sampleproduct'
+'
 mvn package
 
 Then with a command similar to:
 
-java -cp ./target/some-jar-with-dependencies some.package.Sample
+java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
 
-See:
+See:also
+--------
 
 http://olioinfo.net/javadocs/eeproperties/2.8/index.html
 http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
