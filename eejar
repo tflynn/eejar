@@ -263,6 +263,51 @@ public class Sample {
 
 SAMPLE_JAVA_TEMPLATE
 
+SAMPLE_JAVA_TEST_CONTENTS=<<SAMPLE_JAVA_TEST_TEMPLATE
+[COPYRIGHT_MESSAGE]
+package [PACKAGE];
+
+import net.olioinfo.eeproperties.EEProperties;
+import net.olioinfo.slf4j.Slf4jExt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.runner.RunWith;
+
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+
+/**
+ * A brief description of what this class does
+ *
+ * @author #{SOURCE_CODE_AUTHOR}
+ * @version [ARTIFACT_VERSION]
+ * @since [ARTIFACT_VERSION]
+ */
+ 
+@RunWith(JMock.class)
+public class SampleTest {
+
+    Mockery context = new JUnit4Mockery(); 
+
+    /**
+     * Logger instance
+     */
+    private static final Logger logger = LoggerFactory.getLogger(Sample.class);
+
+    @Test
+    public void testSomething() {
+        assertTrue(true);
+    }
+
+}
+
+SAMPLE_JAVA_TEST_TEMPLATE
+
 
 class EEJar
   
@@ -386,6 +431,7 @@ class EEJar
   
   def create_sample_files
     create_sample_java_file
+    create_sample_java_test_file
   end
   
   def create_sample_java_file
@@ -400,6 +446,20 @@ class EEJar
       java_file.puts java
     end
   end
+
+  def create_sample_java_test_file
+    java = SAMPLE_JAVA_TEST_CONTENTS
+    java = java.gsub(/\[COPYRIGHT_MESSAGE\]/,DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE)
+    java = java.gsub(/\[PACKAGE\]/,@package)
+    java = java.gsub(/\[ARTIFACT_VERSION\]/,@artifact_version)
+    package_dir = @package.gsub(/\./,'/')
+    java_file_name = File.join(@starting_dir,@artifact_id,'/src/test/java',package_dir,'SampleTest.java')
+    debug("Creating #{java_file_name}")
+    File.open(java_file_name,'w') do |java_file|
+      java_file.puts java
+    end
+  end
+
   
 end
 
