@@ -24,6 +24,40 @@ http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
 
 =end
 
+DESCRIPTION_TEXT=<<DESCRIPTION_TEXT_TEMPLATE
+eejar is a script that will create a skeleton for a single JAR-based Maven Project.
+
+It uses the same concepts as a Maven archetype - groupID, artifactID and so on.
+
+In addition to the results of a suitable 'mvn archetype:generate' for the archetype 'maven-archetype-quickstart' (1.1),
+the script will add configuration and logging configuration based on EEProperties and Slf4jExt respsectively.
+
+To run:
+
+./eejar
+
+and respond to the prompts, or accept the defaults offered.
+
+Options:
+
+-q quiet mode - Disable this message
+
+Test outputs with:
+
+mvn package
+
+Then with a command similar to:
+
+java -cp ./target/some-jar-with-dependencies some.package.Sample
+
+See:
+
+http://olioinfo.net/javadocs/eeproperties/2.8/index.html
+http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
+
+DESCRIPTION_TEXT_TEMPLATE
+
+
 #####
 # Edit defaults starting here
 #####
@@ -80,6 +114,7 @@ BANNER=<<BANNER_TEMPLATE
 #{EEJAR_COPYRIGHT}
 #{EEJAR_DISTRIBUTION}
 
+#{DESCRIPTION_TEXT}
 BANNER_TEMPLATE
 
 DEFAULT_PROJECT_DIRECTORIES = %w{
@@ -262,8 +297,12 @@ public class Sample {
         EEProperties.sLoadPackageConfiguration(Sample.class);
         Slf4jExt.sConfigureLogging(Sample.class,null,null);
       
+        String defaultProperty = EEProperties.sGetProperty("[PACKAGE].default.property.should.not.be.overridden");
+        String developmentProperty = EEProperties.sGetProperty("[PACKAGE].development.property.should.be.overridden");
         System.out.println( "Hello From " + Sample.class.getName() );
-        logger.debug("Log message from Sample");
+        System.out.println(String.format("Demonstrating default property - %s",defaultProperty));
+        System.out.println(String.format("Demonstrating development property overriding default - %s",developmentProperty));
+        logger.debug("Log message from " + Sample.class.getName() );
     }
 }
 
@@ -314,24 +353,40 @@ public class SampleTest {
 
 SAMPLE_JAVA_TEST_TEMPLATE
 
+EEPROPERTIES_DEFAULTS_CONTENTS=<<EEPROPERTIES_DEFAULTS_TEMPLATE
+# Delete these test properties
+[PACKAGE].default.property.should.not.be.overridden = "will see me - a default value"
+[PACKAGE].development.property.should.be.overridden = "won't see me - a default value"
+EEPROPERTIES_DEFAULTS_TEMPLATE
+
+EEPROPERTIES_DEVELOPMENT_CONTENTS=<<EEPROPERTIES_DEVELOPMENT_TEMPLATE
+# Delete these test properties
+[PACKAGE].development.property.should.be.overridden = "will see me - a development value"
+EEPROPERTIES_DEVELOPMENT_TEMPLATE
+
+EEPROPERTIES_TEST_CONTENTS=<<EEPROPERTIES_TEST_TEMPLATE
+[PACKAGE].test.property = "will see me - a test value"
+EEPROPERTIES_TEST_TEMPLATE
+
+
 LOG4J_DEFAULTS_CONTENTS=<<LOG4J_DEFAULTS_TEMPLATE
 log4j.appender.[PACKAGE].CONSOLE_APPENDER=org.apache.log4j.ConsoleAppender
 log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout=org.apache.log4j.PatternLayout
-log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t[%t]\t%m %n
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t\t[%t]\t%m %n
 log4j.logger.[PACKAGE] = ERROR, [PACKAGE].CONSOLE_APPENDER
 LOG4J_DEFAULTS_TEMPLATE
 
 LOG4J_DEVELOPMENT_CONTENTS=<<LOG4J_DEVELOPMENT_TEMPLATE
 log4j.appender.[PACKAGE].CONSOLE_APPENDER=org.apache.log4j.ConsoleAppender
 log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout=org.apache.log4j.PatternLayout
-log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t[%t]\t%m %n
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t\t[%t]\t%m %n
 log4j.logger.[PACKAGE] = TRACE, [PACKAGE].CONSOLE_APPENDER
 LOG4J_DEVELOPMENT_TEMPLATE
 
 LOG4J_TEST_CONTENTS=<<LOG4J_TEST_TEMPLATE
 log4j.appender.[PACKAGE].CONSOLE_APPENDER=org.apache.log4j.ConsoleAppender
 log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout=org.apache.log4j.PatternLayout
-log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t[%t]\t%m %n
+log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t\t[%-5p]\t\t[%t]\t%m %n
 log4j.logger.[PACKAGE] = DEBUG, [PACKAGE].CONSOLE_APPENDER
 LOG4J_TEST_TEMPLATE
 
@@ -363,14 +418,17 @@ class EEJar
   end
   
   def run
-    #display_banner
+    display_banner
     get_user_input
     create_directory_structure
     create_project_files
   end
   
   def display_banner
-    puts BANNER
+    quiet_mode = ARGV.detect{|arg| arg =~ /-q/}
+    if quiet_mode.nil?
+      puts BANNER
+    end
   end
   
   def get_user_input
@@ -379,8 +437,9 @@ class EEJar
     @artifact_id = get_input_line("Enter artifact ID")
     @artifact_version = get_input_line("Enter version (#{DEFAULT_ARTIFACT_VERSION})", true).strip.chomp
     @artifact_version = DEFAULT_ARTIFACT_VERSION if @artifact_version == ''
-    @package = get_input_line("Enter package (#{@group_id})", true).strip.chomp
-    @package = @group_id.dup if @package == ""
+    default_package = "#{@group_id}.#{@artifact_id}"
+    @package = get_input_line("Enter package (#{default_package})", true).strip.chomp
+    @package = default_package if @package == ""
   end
   
   def get_input_line(prompt, allow_empty = false)
@@ -489,21 +548,15 @@ class EEJar
   end
 
   def create_configuration_files
-    #TODO defaults-ee.properties, development-ee.properties, test-ee.properties
-    #TODO log4j-defaults.properties, log4j-development.properties, log4j-test.properties
-    package_dir = @package.gsub(/\./,'/')
-    directory_prefix = File.join(@starting_dir,@artifact_id,'/src/main/resources',package_dir)
-    EEPROPERTIES_FILE_NAMES.each do |eeproperties_file_name|
-      eeproperties_full_file_name = File.join(directory_prefix,eeproperties_file_name)
-      debug("Creating #{eeproperties_full_file_name}")
-      FileUtils.touch(eeproperties_full_file_name)      
-    end
-    create_log4j_configuration_file('log4j-defaults.properties',LOG4J_DEFAULTS_CONTENTS)
-    create_log4j_configuration_file('log4j-development.properties',LOG4J_DEVELOPMENT_CONTENTS)
-    create_log4j_configuration_file('log4j-test.properties',LOG4J_TEST_CONTENTS)
+    create_configuration_file("defaults-ee.properties",EEPROPERTIES_DEFAULTS_CONTENTS)
+    create_configuration_file("development-ee.properties",EEPROPERTIES_DEVELOPMENT_CONTENTS)
+    create_configuration_file("test-ee.properties",EEPROPERTIES_TEST_CONTENTS)
+    create_configuration_file('log4j-defaults.properties',LOG4J_DEFAULTS_CONTENTS)
+    create_configuration_file('log4j-development.properties',LOG4J_DEVELOPMENT_CONTENTS)
+    create_configuration_file('log4j-test.properties',LOG4J_TEST_CONTENTS)
   end
   
-  def create_log4j_configuration_file(name,contents)
+  def create_configuration_file(name,contents)
     package_dir = @package.gsub(/\./,'/')
     directory_prefix = File.join(@starting_dir,@artifact_id,'/src/main/resources',package_dir)
     contents = contents.gsub(/\[PACKAGE\]/,@package)
