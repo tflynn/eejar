@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+
+# Copyright (c) 2010 Tracy Flynn - All rights reserved
+# May be distributed under the same terms as Ruby
+
+require 'fileutils'
+
+=begin
+
+Title eejar
+Version 1.0
+Author Tracy Flynn
+Date 20100909
+
+eejar is a script that will create a skeleton for a single JAR-based Maven Project.
+
+In addition to the results of a suitable 'mvn archetype:generate' for the archetype 'maven-archetype-quickstart' (1.1),
+the script will add configuration and logging configuration based on EEProperties and Slf4jExt respsectively.
+
+See 
+
+http://olioinfo.net/javadocs/eeproperties/2.8/index.html
+http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
+
+=end
+
+# Edit defaults starting here
+
+DEFAULT_GROUP_ID='net.olioinfo'
+DEFAULT_ARTIFACT_VERSION='1.0'
+
+# End editing defaults - Do not edit below this point
+
+EEJAR_TITLE='eejar'
+EEJAR_VERSION_MAJOR=1
+EEJAR_VERSION_MINOR=0
+EEJAR_VERSION="#{EEJAR_VERSION_MAJOR}.#{EEJAR_VERSION_MINOR}"
+EEJAR_AUTHOR='Tracy Flynn'
+EEJAR_VERSION_DATE='2010-09-09'
+EEJAR_COPYRIGHT='Copyright (c) 2010 Tracy Flynn - All rights reserved'
+EEJAR_DISTRIBUTION='May be distributed under the same terms as Ruby'
+
+BANNER=<<BANNER_TEXT
+
+#{EEJAR_TITLE} #{EEJAR_VERSION} #{EEJAR_AUTHOR}
+#{EEJAR_COPYRIGHT}
+#{EEJAR_DISTRIBUTION}
+
+BANNER_TEXT
+
+
+
+class EEJar
+  
+  class << self
+    
+    def run
+      eejar = EEJar.new
+      eejar.run
+    end
+    
+  end
+  
+  def initialize
+    @starting_dir = Dir.getwd
+  end
+  
+  def run
+    #display_banner
+    get_user_input
+    create_directory_structure
+  end
+  
+  def display_banner
+    puts BANNER
+  end
+  
+  def get_user_input
+    @group_id = get_input_line("Enter group id (#{DEFAULT_GROUP_ID})", true).strip.chomp
+    @group_id = DEFAULT_GROUP_ID if @group_id == ""
+    @artifact_id = get_input_line("Enter artifact ID")
+    @version = get_input_line("Enter version (#{DEFAULT_ARTIFACT_VERSION})", true).strip.chomp
+    @version = DEFAULT_ARTIFACT_VERSION if @version == ''
+    @package = get_input_line("Enter package (#{@group_id})", true).strip.chomp
+    @package = @group_id.dup if @package == ""
+  end
+  
+  def get_input_line(prompt, allow_empty = false)
+    input_line = nil
+    while (input_line.nil? || input_line == '') 
+      STDOUT.print "#{prompt} : "
+      input_line = STDIN.gets
+      unless allow_empty
+        input_line = input_line.strip.chomp
+      end
+    end
+    return input_line
+  end
+
+  def create_directory_structure
+    delete_tree_with_prompt(@artifact_id)
+    
+  end
+  
+  def delete_tree_with_prompt(root_dir)
+    if File.exists?(root_dir)
+      qualified_path = File.expand_path(root_dir)
+      yes_no = get_input_line("Warning: about to delete #{qualified_path}. [Y/N]")
+      if yes_no.downcase =~ /^y/
+        puts "Deleting #{qualified_path}"
+        FileUtils.rm_rf(qualified_path)
+      end
+    end
+  end
+  
+end
+
+if $0 == __FILE__
+
+  EEJar.run
+  
+end
