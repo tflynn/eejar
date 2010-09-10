@@ -1,0 +1,6 @@
+eejar
+=====
+
+Utility to create a Maven-based project skeleton for a Jar with additional configuration,
+logging and other support automatically configured.
+

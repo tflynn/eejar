@@ -24,12 +24,26 @@ http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
 
 =end
 
+#####
 # Edit defaults starting here
+#####
 
 DEFAULT_GROUP_ID='net.olioinfo'
 DEFAULT_ARTIFACT_VERSION='1.0'
 
+POM_DEPENDENCY_JUNIT_VERSION='4.8.1'
+POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION='1.5.8'
+POM_DEPENDENCY_SLF4J_SLF4J_API_VERSION='1.5.8'
+POM_DEPENDENCY_SLF4J_SLF4J_LOG4J12_VERSION='1.5.8'
+POM_DEPENDENCY_LOG4J_VERSION='1.2.14'
+POM_DEPENDENCY_EEPROPERTIES_VERSION='2.8'
+POM_DEPENDENCY_SL4J_EXT_VERSION='2.5'
+POM_DEPENDENCY_JMOCK_JUNIT4_VERSION='2.5.1'
+
+
+#####
 # End editing defaults - Do not edit below this point
+#####
 
 EEJAR_TITLE='eejar'
 EEJAR_VERSION_MAJOR=1
@@ -40,13 +54,139 @@ EEJAR_VERSION_DATE='2010-09-09'
 EEJAR_COPYRIGHT='Copyright (c) 2010 Tracy Flynn - All rights reserved'
 EEJAR_DISTRIBUTION='May be distributed under the same terms as Ruby'
 
-BANNER=<<BANNER_TEXT
+BANNER=<<BANNER_TEMPLATE
 
 #{EEJAR_TITLE} #{EEJAR_VERSION} #{EEJAR_AUTHOR}
 #{EEJAR_COPYRIGHT}
 #{EEJAR_DISTRIBUTION}
 
-BANNER_TEXT
+BANNER_TEMPLATE
+
+DEFAULT_PROJECT_DIRECTORIES = %w{
+  /docs
+  /logs
+  /src
+  /src/main
+  /src/main/java
+  /src/main/resources
+  /src/test
+  /src/test/java
+}
+
+PACKAGE_SPECIFIC_DIRECTORIES = %w{
+  /src/main/java/[PACKAGE]
+  /src/main/resources/[PACKAGE]
+  /src/test/java/[PACKAGE]
+}
+
+POM_PACKAGING='jar'
+
+POM_CONTENTS=<<POM_TEMPLATE
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>[PACKAGE]</groupId>
+    <artifactId>[ARTIFACT_ID]</artifactId>
+    <version>[ARTIFACT_VERSION]</version>
+    <packaging>#{POM_PACKAGING}</packaging>
+
+    <name>[ARTIFACT_ID]</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+        <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>make-my-jar-with-dependencies</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>net-oilinfo</id>
+            <url>http://myowndemo.com:8080/nexus/content/repositories/net-olioinfo</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>#{POM_DEPENDENCY_JUNIT_VERSION}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_SLF4J_API_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_SLF4J_LOG4J12_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>#{POM_DEPENDENCY_LOG4J_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.olioinfo</groupId>
+            <artifactId>eeproperties</artifactId>
+            <version>#{POM_DEPENDENCY_EEPROPERTIES_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.olioinfo</groupId>
+            <artifactId>slf4j-ext</artifactId>
+            <version>#{POM_DEPENDENCY_SL4J_EXT_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+            <version>#{POM_DEPENDENCY_JMOCK_JUNIT4_VERSION}</version>
+        </dependency>
+
+    </dependencies>
+</project>
+POM_TEMPLATE
 
 
 
@@ -62,13 +202,25 @@ class EEJar
   end
   
   def initialize
+    @debug = true
     @starting_dir = Dir.getwd
+    if @debug
+      @starting_dir = File.join(@starting_dir,'debug')
+    end
+    
+  end
+  
+  def debug(msg)
+    if @debug
+      puts msg
+    end
   end
   
   def run
     #display_banner
     get_user_input
     create_directory_structure
+    create_project_files
   end
   
   def display_banner
@@ -79,8 +231,8 @@ class EEJar
     @group_id = get_input_line("Enter group id (#{DEFAULT_GROUP_ID})", true).strip.chomp
     @group_id = DEFAULT_GROUP_ID if @group_id == ""
     @artifact_id = get_input_line("Enter artifact ID")
-    @version = get_input_line("Enter version (#{DEFAULT_ARTIFACT_VERSION})", true).strip.chomp
-    @version = DEFAULT_ARTIFACT_VERSION if @version == ''
+    @artifact_version = get_input_line("Enter version (#{DEFAULT_ARTIFACT_VERSION})", true).strip.chomp
+    @artifact_version = DEFAULT_ARTIFACT_VERSION if @artifact_version == ''
     @package = get_input_line("Enter package (#{@group_id})", true).strip.chomp
     @package = @group_id.dup if @package == ""
   end
@@ -98,18 +250,47 @@ class EEJar
   end
 
   def create_directory_structure
-    delete_tree_with_prompt(@artifact_id)
+    # Clean out existing directory
+    delete_tree_with_prompt(File.join(@starting_dir,@artifact_id))
+    # Create standard directories
+    DEFAULT_PROJECT_DIRECTORIES.each do |relative_directory|
+      qualified_directory = File.join(@starting_dir,@artifact_id,relative_directory)
+      debug("About to create " + qualified_directory)
+      FileUtils.mkdir_p(qualified_directory)
+    end
+    # Create package-specific directories
+    PACKAGE_SPECIFIC_DIRECTORIES.each do |partial_package_directory|
+      package_dir = @package.gsub(/\./,'/')
+      qualified_directory = File.join(@starting_dir,@artifact_id,partial_package_directory.sub(/\[PACKAGE\]/,package_dir))
+      debug("About to create " + qualified_directory)
+      FileUtils.mkdir_p(qualified_directory)
+    end
     
   end
   
   def delete_tree_with_prompt(root_dir)
     if File.exists?(root_dir)
       qualified_path = File.expand_path(root_dir)
-      yes_no = get_input_line("Warning: about to delete #{qualified_path}. [Y/N]")
+      yes_no = get_input_line("Warning: About to delete #{qualified_path}. [Y/N]")
       if yes_no.downcase =~ /^y/
         puts "Deleting #{qualified_path}"
         FileUtils.rm_rf(qualified_path)
       end
+    end
+  end
+  
+  def create_project_files
+    create_pom
+  end
+  
+  def create_pom
+    pom = POM_CONTENTS.gsub(/\[PACKAGE\]/,@package)
+    pom = pom.gsub(/\[ARTIFACT_ID\]/,@artifact_id)
+    pom = pom.gsub(/\[ARTIFACT_VERSION\]/,@artifact_version)
+    pom_file_name = File.join(@starting_dir,@artifact_id,"pom.xml")
+    debug("Creating #{pom_file_name}")
+    File.open(pom_file_name,'w') do |pom_file|
+      pom_file.puts pom
     end
   end
   
