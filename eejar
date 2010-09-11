@@ -5,14 +5,60 @@
 
 require 'fileutils'
 
+
+#####
+# Edit defaults starting here
+#####
+
+DEFAULT_GROUP_ID='net.olioinfo'
+DEFAULT_ARTIFACT_VERSION='1.0'
+
+#SOURCE_CODE_AUTHOR=`echo $LOGNAME`.strip.chomp
+SOURCE_CODE_AUTHOR='Tracy Flynn'
+
+POM_DEPENDENCY_JUNIT_VERSION='4.8.1'
+POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION='1.5.8'
+POM_DEPENDENCY_SLF4J_SLF4J_API_VERSION='1.5.8'
+POM_DEPENDENCY_SLF4J_SLF4J_LOG4J12_VERSION='1.5.8'
+POM_DEPENDENCY_LOG4J_VERSION='1.2.14'
+POM_DEPENDENCY_EEPROPERTIES_VERSION='2.8'
+POM_DEPENDENCY_SL4J_EXT_VERSION='2.5'
+POM_DEPENDENCY_JMOCK_JUNIT4_VERSION='2.5.1'
+POM_DEPENDENCY_JAVAX_SERVLET_API_VERSION='2.5'
+POM_DEPENDENCY_GLASSFISH_EL_VERSION='2.2'
+POM_DEPENDENCY_GLASSFISH_JSP_VERSION='2.2'
+POM_DEPENDENCY_GLASSFISH_JSTL_VERSION='1.2'
+
+DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE=<<DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
+/* Copyright 2009-2010 Tracy Flynn
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
+
+#####
+# End editing defaults - Do not edit below this point
+#####
+
+
 # For testing use only
-# NO_BANNER default is true
+# NO_BANNER default is false
 NO_BANNER=true
 # FORCE_EXECUTABLE_TYPE should be commented out by default
 FORCE_EXECUTABLE_TYPE=:war
 # FORCE_DEBUG should be commented out by default
 FORCE_DEBUG=true
-# Section For testing use only
+# For testing use only ends
 
 if __FILE__ =~ /eejar/
   executable_type = :jar
@@ -79,47 +125,6 @@ http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
 DESCRIPTION_TEXT_TEMPLATE
 
 
-#####
-# Edit defaults starting here
-#####
-
-
-
-DEFAULT_GROUP_ID='net.olioinfo'
-DEFAULT_ARTIFACT_VERSION='1.0'
-
-SOURCE_CODE_AUTHOR='Tracy Flynn'
-
-POM_DEPENDENCY_JUNIT_VERSION='4.8.1'
-POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION='1.5.8'
-POM_DEPENDENCY_SLF4J_SLF4J_API_VERSION='1.5.8'
-POM_DEPENDENCY_SLF4J_SLF4J_LOG4J12_VERSION='1.5.8'
-POM_DEPENDENCY_LOG4J_VERSION='1.2.14'
-POM_DEPENDENCY_EEPROPERTIES_VERSION='2.8'
-POM_DEPENDENCY_SL4J_EXT_VERSION='2.5'
-POM_DEPENDENCY_JMOCK_JUNIT4_VERSION='2.5.1'
-
-DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE=<<DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
-/* Copyright 2009-2010 Tracy Flynn
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
-
-#####
-# End editing defaults - Do not edit below this point
-#####
-
 EEJAR_TITLE=EXECUTABLE_NAME
 EEJAR_VERSION_MAJOR=2
 EEJAR_VERSION_MINOR=0
@@ -143,6 +148,7 @@ BANNER_TEMPLATE
 
 DEFAULT_PROJECT_DIRECTORIES = %w{
   /docs
+  /docs/javadocs
   /logs
   /src
   /src/main
@@ -198,13 +204,6 @@ SampleServlet.java
 SampleServletTest.java
 SPRINGWAR_GIT_IGNORE_TEMPLATE
 
-EEPROPERTIES_FILE_NAMES=%w{defaults-ee.properties development-ee.properties test-ee.properties}
-
-
-
-POM_PACKAGING_JAR='jar'
-POM_PACKAGING=POM_PACKAGING_JAR
-
 POM_CONTENTS_JAR=<<POM_TEMPLATE_JAR
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -213,7 +212,7 @@ POM_CONTENTS_JAR=<<POM_TEMPLATE_JAR
     <groupId>[PACKAGE]</groupId>
     <artifactId>[ARTIFACT_ID]</artifactId>
     <version>[ARTIFACT_VERSION]</version>
-    <packaging>#{POM_PACKAGING}</packaging>
+    <packaging>[POM_PACKAGING]</packaging>
 
     <name>[ARTIFACT_ID]</name>
     <url>http://maven.apache.org</url>
@@ -255,7 +254,7 @@ POM_CONTENTS_JAR=<<POM_TEMPLATE_JAR
 
     <repositories>
         <repository>
-            <id>net-oilinfo</id>
+            <id>net-olioinfo</id>
             <url>http://myowndemo.com:8080/nexus/content/repositories/net-olioinfo</url>
         </repository>
     </repositories>
@@ -312,6 +311,272 @@ POM_CONTENTS_JAR=<<POM_TEMPLATE_JAR
 </project>
 POM_TEMPLATE_JAR
 
+POM_CONTENTS_WAR=<<POM_TEMPLATE_WAR
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>[PACKAGE]</groupId>
+    <artifactId>[ARTIFACT_ID]</artifactId>
+    <version>[ARTIFACT_VERSION]</version>
+    <packaging>[POM_PACKAGING]</packaging>
+
+    <name>[ARTIFACT_ID]</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <finalName>[WAR_FINAL_NAME]</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>8.0.0.M1</version>
+            </plugin>            
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>maven2-repository.dev.java.net</id>
+            <name>Java.net Repository for Maven</name>
+            <url>http://download.java.net/maven/2/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>Glassfish-maven2-repository.dev.java.net</id>
+            <name>JGlassfish ava.net Repository for Maven</name>
+            <url>http://download.java.net/maven/glassfish/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+          <id>java.net</id>
+          <url>http://download.java.net/maven/1</url>
+          <layout>legacy</layout>
+        </repository>
+        <repository>
+            <id>net-olioinfo</id>
+            <url>http://myowndemo.com:8080/nexus/content/repositories/net-olioinfo</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>#{POM_DEPENDENCY_JUNIT_VERSION}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_SLF4J_API_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_SLF4J_LOG4J12_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>#{POM_DEPENDENCY_LOG4J_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.olioinfo</groupId>
+            <artifactId>eeproperties</artifactId>
+            <version>#{POM_DEPENDENCY_EEPROPERTIES_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.olioinfo</groupId>
+            <artifactId>slf4j-ext</artifactId>
+            <version>#{POM_DEPENDENCY_SL4J_EXT_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+            <version>#{POM_DEPENDENCY_JMOCK_JUNIT4_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>#{POM_DEPENDENCY_JAVAX_SERVLET_API_VERSION}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        
+        
+        <!-- The following group allows 'mvn jetty:run' to function properly -->
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>el-impl</artifactId>
+            <version>#{POM_DEPENDENCY_GLASSFISH_EL_VERSION}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>el-api</artifactId>
+            <version>#{POM_DEPENDENCY_GLASSFISH_EL_VERSION}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jsp-impl</artifactId>
+            <version>#{POM_DEPENDENCY_GLASSFISH_JSP_VERSION}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+            <version>#{POM_DEPENDENCY_GLASSFISH_JSP_VERSION}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jstl-impl</artifactId>
+            <version>#{POM_DEPENDENCY_GLASSFISH_JSTL_VERSION}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+    </dependencies>
+</project>
+
+POM_TEMPLATE_WAR
+
+POM_CONTENTS_SPRINGWAR=<<POM_TEMPLATE_SPRINGWAR
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>[PACKAGE]</groupId>
+    <artifactId>[ARTIFACT_ID]</artifactId>
+    <version>[ARTIFACT_VERSION]</version>
+    <packaging>[POM_PACKAGING]</packaging>
+
+    <name>[ARTIFACT_ID]</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-my-jar-with-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>net-olioinfo</id>
+            <url>http://myowndemo.com:8080/nexus/content/repositories/net-olioinfo</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>#{POM_DEPENDENCY_JUNIT_VERSION}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_SLF4J_API_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>#{POM_DEPENDENCY_SLF4J_SLF4J_LOG4J12_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>#{POM_DEPENDENCY_LOG4J_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.olioinfo</groupId>
+            <artifactId>eeproperties</artifactId>
+            <version>#{POM_DEPENDENCY_EEPROPERTIES_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.olioinfo</groupId>
+            <artifactId>slf4j-ext</artifactId>
+            <version>#{POM_DEPENDENCY_SL4J_EXT_VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock-junit4</artifactId>
+            <version>#{POM_DEPENDENCY_JMOCK_JUNIT4_VERSION}</version>
+        </dependency>
+
+    </dependencies>
+</project>
+
+POM_TEMPLATE_SPRINGWAR
 
 
 SAMPLE_JAVA_CONTENTS=<<SAMPLE_JAVA_TEMPLATE
@@ -346,6 +611,8 @@ public class Sample {
     public static void main( String[] args ) {
       
         // Configure using EEProperties and Slf4jExt
+        // The properties files for EEProperties and Slf4jExt must be in the same package
+        // in the ./resouces structure as the Sample class is in the main structure
         EEProperties.sLoadPackageConfiguration(Sample.class);
         Slf4jExt.sConfigureLogging(Sample.class,null,null);
       
@@ -404,6 +671,101 @@ public class SampleTest {
 }
 
 SAMPLE_JAVA_TEST_TEMPLATE
+
+SAMPLE_JAVA_SERVLET_CONTENTS=<<SAMPLE_JAVA_SERVLET_TEMPLATE
+[COPYRIGHT_MESSAGE]
+package [PACKAGE];
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+
+import net.olioinfo.eeproperties.EEProperties;
+import net.olioinfo.slf4j.Slf4jExt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * A brief description of what this class does
+ *
+ * @author #{SOURCE_CODE_AUTHOR}
+ * @version [ARTIFACT_VERSION]
+ * @since [ARTIFACT_VERSION]
+ */
+public class SampleServlet extends HttpServlet {
+
+    /**
+     * Logger instance
+     */
+    private static final Logger logger = LoggerFactory.getLogger(SampleServlet.class);
+
+    /**
+     * Servlet initialization
+     */
+    public void init(ServletConfig config) {
+        // Configure using EEProperties and Slf4jExt
+        // The properties files for EEProperties and Slf4jExt must be in the same package
+        // in the resouces structure as the SampleServlet class is in the main structure
+        EEProperties.sLoadPackageConfiguration(SampleServlet.class);
+        Slf4jExt.sConfigureLogging(SampleServlet.class,null,null);
+ 
+        String defaultProperty = EEProperties.sGetProperty("[PACKAGE].default.property.should.not.be.overridden");
+        String developmentProperty = EEProperties.sGetProperty("[PACKAGE].development.property.should.be.overridden");
+        System.out.println( "Hello From " + SampleServlet.class.getName() );
+        System.out.println(String.format("Demonstrating default property - %s",defaultProperty));
+        System.out.println(String.format("Demonstrating development property overriding default - %s",developmentProperty));
+        logger.debug("Log message from " + SampleServlet.class.getName() + " initialization");
+        
+    }
+    
+    /**
+     * Respond to GET requests
+     */
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+        logger.debug("Log message from " + SampleServlet.class.getName() + " doGet");
+        PrintWriter out = response.getWriter();
+        out.println("<html><head><title>Sample Servlet</title></head><body>Congratulations! - you have a functioning servlet!</body></html>");
+    }
+
+    /**
+     * Respond to POST requests
+     */
+    public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+        logger.debug("Log message from " + SampleServlet.class.getName() + " doPost");
+        doGet(request,response);
+    }
+     
+}
+
+SAMPLE_JAVA_SERVLET_TEMPLATE
+
+SAMPLE_JAVA_SERVLET_WEB_XML_CONTENTS=<<SAMPLE_JAVA_SERVLET__WEB_XML_TEMPLATE
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Sample Servlet</display-name>
+    <servlet>
+        <servlet-name>SampleServlet</servlet-name>
+        <servlet-class>[PACKAGE].SampleServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SampleServlet</servlet-name>
+        <url-pattern>/[WAR_FINAL_NAME]/*</url-pattern>
+    </servlet-mapping>
+</web-app>
+
+SAMPLE_JAVA_SERVLET__WEB_XML_TEMPLATE
+
+EEPROPERTIES_FILE_NAMES=%w{defaults-ee.properties development-ee.properties test-ee.properties}
 
 EEPROPERTIES_DEFAULTS_CONTENTS=<<EEPROPERTIES_DEFAULTS_TEMPLATE
 # Delete these test properties
@@ -469,17 +831,26 @@ EXECUTABLE_TYPE_INFO = {
            :run_instructions => JAR_RUN_INSTRUCTIONS,
            :default_directories => DEFAULT_PROJECT_DIRECTORIES,
            :project_specific_directories => nil,
-           :additional_git_ignore_files => JAR_GIT_IGNORE_CONTENTS},
+           :additional_git_ignore_files => JAR_GIT_IGNORE_CONTENTS,
+           :pom_packaging => 'jar',
+           :pom => POM_CONTENTS_JAR,
+           :pom_build_name => nil},
   :war => {:project_description => 'servlet (WAR) Maven Project',
            :run_instructions => WAR_RUN_INSTRUCTIONS,
            :default_directories => DEFAULT_PROJECT_DIRECTORIES,
            :project_specific_directories => DEFAULT_WAR_PROJECT_DIRECTORIES,
-           :additional_git_ignore_files => WAR_GIT_IGNORE_CONTENTS},
+           :additional_git_ignore_files => WAR_GIT_IGNORE_CONTENTS,
+           :pom_packaging => 'war',
+           :pom => POM_CONTENTS_WAR,
+           :pom_build_name => 'sample' },
   :springwar => {:project_description => 'Spring MVC WAR-based Maven Project',
            :run_instructions => SPRINGWAR_RUN_INSTRUCTIONS,
            :default_directories => DEFAULT_PROJECT_DIRECTORIES,
            :project_specific_directories => DEFAULT_WAR_PROJECT_DIRECTORIES,
-           :additional_git_ignore_files => SPRINGWAR_GIT_IGNORE_CONTENTS },
+           :additional_git_ignore_files => SPRINGWAR_GIT_IGNORE_CONTENTS,
+           :pom_packaging => 'war',
+           :pom => POM_CONTENTS_SPRINGWAR,
+           :pom_build_name => 'sample' }
 }
 
 class EEJar
@@ -501,7 +872,8 @@ class EEJar
     if @debug
       @starting_dir = File.join(@starting_dir,'debug')
     end
-    @executable_info = EXECUTABLE_TYPE_INFO[EXECUTABLE_TYPE]
+    @executable_type = EXECUTABLE_TYPE
+    @executable_info = EXECUTABLE_TYPE_INFO[@executable_type]
   end
   
   def debug(msg)
@@ -592,7 +964,6 @@ class EEJar
   
   def create_project_files
     create_gitignore
-    exit # DEBUG
     create_pom
     create_placeholder_files
     create_configuration_files
@@ -612,10 +983,16 @@ class EEJar
   end
   
   def create_pom
-    pom = POM_CONTENTS_JAR.gsub(/\[PACKAGE\]/,@package)
+    pom_packaging = @executable_info[:pom_packaging]
+    pom = @executable_info[:pom]
+    pom = pom.gsub(/\[POM_PACKAGING\]/,pom_packaging)
+    pom = pom.gsub(/\[PACKAGE\]/,@package)
     pom = pom.gsub(/\[ARTIFACT_ID\]/,@artifact_id)
     pom = pom.gsub(/\[ARTIFACT_VERSION\]/,@artifact_version)
     pom_file_name = File.join(@starting_dir,@artifact_id,"pom.xml")
+    if @executable_info[:pom_build_name]
+      pom = pom.gsub(/\[WAR_FINAL_NAME\]/, @executable_info[:pom_build_name])
+    end
     debug("Creating #{pom_file_name}")
     File.open(pom_file_name,'w') do |pom_file|
       pom_file.puts pom
@@ -623,13 +1000,22 @@ class EEJar
   end
   
   def create_placeholder_files
-    docs_placeholder_file_name = File.join(@starting_dir,@artifact_id,'docs','index.html')
+    docs_placeholder_file_name = File.join(@starting_dir,@artifact_id,'docs','README')
     FileUtils.touch(docs_placeholder_file_name)
+    javadocs_placeholder_file_name = File.join(@starting_dir,@artifact_id,'docs/javadocs','index.html')
+    FileUtils.touch(javadocs_placeholder_file_name)
   end
   
   def create_sample_files
-    create_sample_java_file
-    create_sample_java_test_file
+    if @executable_type == :jar
+      create_sample_java_file
+      create_sample_java_test_file
+    elsif @executable_type == :war
+      create_sample_java_servlet_file
+      create_sample_web_xml_file
+    elsif @executable_type == :springwar
+      
+    end
   end
   
   def create_sample_java_file
@@ -658,6 +1044,32 @@ class EEJar
     end
   end
 
+  def create_sample_java_servlet_file
+    java = SAMPLE_JAVA_SERVLET_CONTENTS
+    java = java.gsub(/\[COPYRIGHT_MESSAGE\]/,DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE)
+    java = java.gsub(/\[PACKAGE\]/,@package)
+    java = java.gsub(/\[ARTIFACT_VERSION\]/,@artifact_version)
+    package_dir = @package.gsub(/\./,'/')
+    java_file_name = File.join(@starting_dir,@artifact_id,'/src/main/java',package_dir,'SampleServlet.java')
+    debug("Creating #{java_file_name}")
+    File.open(java_file_name,'w') do |java_file|
+      java_file.puts java
+    end
+  end
+
+  def create_sample_web_xml_file
+    xml = SAMPLE_JAVA_SERVLET_WEB_XML_CONTENTS
+    xml = xml.gsub(/\[PACKAGE\]/,@package)
+    if @executable_info[:pom_build_name]
+      xml = xml.gsub(/\[WAR_FINAL_NAME\]/, @executable_info[:pom_build_name])
+    end
+    xml_file_name = File.join(@starting_dir,@artifact_id,'/src/main/webapp/WEB-INF','web.xml')
+    debug("Creating #{xml_file_name}")
+    File.open(xml_file_name,'w') do |xml_file|
+      xml_file.puts xml
+    end
+  end
+  
   def create_configuration_files
     create_configuration_file("defaults-ee.properties",EEPROPERTIES_DEFAULTS_CONTENTS)
     create_configuration_file("development-ee.properties",EEPROPERTIES_DEVELOPMENT_CONTENTS)
