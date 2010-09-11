@@ -9,7 +9,7 @@ Prerequisites
 
 An installed copy of Ruby to generate the project skeleton.
 
-An installed copy of Maven 2.x to test the project
+An installed copy of Maven 2.x to run and test the project
 
 To run
 ------
