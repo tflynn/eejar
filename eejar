@@ -4,7 +4,7 @@
 # May be distributed under the same terms as Ruby
 
 require 'fileutils'
-
+require 'rbconfig'
 
 #####
 # Edit defaults starting here
@@ -55,7 +55,7 @@ DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
 # NO_BANNER default is false
 NO_BANNER=true
 # FORCE_EXECUTABLE_TYPE should be commented out by default
-FORCE_EXECUTABLE_TYPE=:war
+FORCE_EXECUTABLE_TYPE=:jar
 # FORCE_DEBUG should be commented out by default
 FORCE_DEBUG=true
 # For testing use only ends
@@ -147,6 +147,7 @@ Author: #{EEJAR_AUTHOR}
 BANNER_TEMPLATE
 
 DEFAULT_PROJECT_DIRECTORIES = %w{
+  /bin
   /docs
   /docs/javadocs
   /logs
@@ -805,17 +806,20 @@ log4j.logger.[PACKAGE] = DEBUG, [PACKAGE].CONSOLE_APPENDER
 LOG4J_TEST_TEMPLATE
 
 JAR_RUN_INSTRUCTIONS=<<JAR_RUN_INSTRUCTIONS_TEMPLATE
-Then issue a command similar to:
+Then issue the command:
 
-java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
+./bin/runit
+
 JAR_RUN_INSTRUCTIONS_TEMPLATE
 
 WAR_RUN_INSTRUCTIONS=<<WAR_RUN_INSTRUCTIONS_TEMPLATE
-Then issue a command similar to:
+Then issue the command:
 
-Don't know yet
+./bin/runit
 
-java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
+If you're running under OS X you, after about 10 seconds, you should see the browser
+open with a web page indicating success.
+
 WAR_RUN_INSTRUCTIONS_TEMPLATE
 
 SPRINGWAR_RUN_INSTRUCTIONS=<<SPRINGWAR_RUN_INSTRUCTIONS_TEMPLATE
@@ -968,6 +972,7 @@ class EEJar
     create_placeholder_files
     create_configuration_files
     create_sample_files
+    create_run_files
   end
   
   def create_gitignore
@@ -1088,6 +1093,26 @@ class EEJar
     File.open(full_log4j_configuration_file,'w') do |file|
       file.puts contents
     end
+  end
+  
+  def create_run_files
+    #java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
+    run_file_name = File.join(@starting_dir,@artifact_id,'bin','runit')
+    File.open(run_file_name,'w') do |file|
+      file.puts "#!/usr/bin/env bash"
+      if @executable_type == :jar
+        cmd = %{\nmvn package\njava -cp ./target/#{@artifact_id}-#{@artifact_version}-jar-with-dependencies.jar  #{@package}.Sample}
+      elsif @executable_type == :war
+        cmd = %{mvn jetty:run &}
+        if Config::CONFIG["host_os"] =~ /darwin/
+          cmd = cmd + %{\nsleep 10\nopen http://localhost:8080/#{@executable_info[:pom_build_name]}}
+        end
+      elsif @executable_type == :springwar
+      
+      end
+      file.puts cmd
+    end
+    File.chmod(0755,run_file_name)
   end
   
 end
