@@ -55,7 +55,7 @@ DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
 # NO_BANNER default is false
 NO_BANNER=false
 # FORCE_EXECUTABLE_TYPE should be commented out by default
-#FORCE_EXECUTABLE_TYPE=:jar
+#FORCE_EXECUTABLE_TYPE=:war
 # FORCE_DEBUG should be commented out by default
 #FORCE_DEBUG=false
 # For testing use only ends
@@ -742,6 +742,165 @@ public class SampleServlet extends HttpServlet {
 
 SAMPLE_JAVA_SERVLET_TEMPLATE
 
+SAMPLE_JAVA_SERVLET_TEST_CONTENTS=<<SAMPLE_JAVA_SERVLET_TEST_TEMPLATE
+[COPYRIGHT_MESSAGE]
+package [PACKAGE];
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.olioinfo.eeproperties.EEProperties;
+import net.olioinfo.slf4j.Slf4jExt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.runner.RunWith;
+
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+
+/**
+ * A brief description of what this class does
+ *
+ * @author #{SOURCE_CODE_AUTHOR}
+ * @version [ARTIFACT_VERSION]
+ * @since [ARTIFACT_VERSION]
+ */
+@RunWith(JMock.class)
+public class SampleServletTest {
+
+    Mockery context = new JUnit4Mockery(); 
+
+    /**
+     * Logger instance
+     */
+    private static final Logger logger = LoggerFactory.getLogger(SampleServletTest.class);
+
+    @Test
+    public void testServletInit() {
+        /*
+         * The testing strategy with JMock works best from the inside out.
+         *
+         * Look for the 'innermost' piece you need to test and works outwards.
+         */
+
+        /*
+         * Step 1
+         *
+         * For call to an NTTPServlet.init method, we first need a ServletConfig object.
+         */
+        final ServletConfig servletConfigMock = (ServletConfig) context.mock(ServletConfig.class);
+
+        /*
+         * Step 2
+         *
+         * Instance the SampleServlet
+         */
+        final SampleServlet sampleServlet = new SampleServlet();
+
+        /*
+         * Step 3
+         *
+         * Call the init method with the mocked ServletConfig object
+         */
+        sampleServlet.init(servletConfigMock);
+
+        /*
+         * In this case, there are no assertions to test - just output to the console
+         * that indicates the configuration and logging has been initialized correctly.
+         */
+
+        assertTrue(true);
+    }
+
+    @Test
+    public void testServletGet() {
+
+        try {
+            /*
+             * The testing strategy with JMock works best from the inside out.
+             *
+             * Look for the 'innermost' piece you need to test and works outwards.
+             *
+             * This case is a little more involved than the first test above.
+             *
+             * Since we don't have a Servlet container, we have to mimic what it does
+             * when it calls a Servlet with a request.
+             */
+
+            /*
+             * Here's what we expect back
+             */
+            final String expectedHTML = "<html><head><title>Sample Servlet</title></head><body>Congratulations! - you have a functioning servlet!</body></html>\\n";
+            
+            /*
+             * Step 1
+             *
+             * We want to test what the servlet generates for output from the doGet method.
+             * So we need a PrintWriter object whose output we can capture and examine.
+             * That turns out to be easy, without needing a mock object at all.
+             */
+            final StringWriter stringWriter = new StringWriter();
+            final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+            /*
+             * Step 2
+             *
+             * We need a mock HttpServletRequest object that does nothing
+             */
+            final HttpServletRequest mockHttpServletRequest = (HttpServletRequest) context.mock(HttpServletRequest.class);
+
+            /*
+             * Step 3
+             *
+             * We need a mock HttpServletResponse object that will return the
+             * PrintWriter instance from Step 1 in response to the 'getWriter' call.
+             *
+             * Examine 'SampleSevlet' if the reason isn't clear.
+             */
+            final HttpServletResponse mockHttpServletResponse = (HttpServletResponse) context.mock(HttpServletResponse.class);
+
+            context.checking(new Expectations() {{
+                oneOf (mockHttpServletResponse).getWriter(); will(returnValue(printWriter));
+            }});
+
+            /*
+             * Step 4
+             * 
+             * Finally call the doGet method with all the pieces.
+             * Remember, we need to initialize the servlet first!
+             */
+            final ServletConfig servletConfigMock = (ServletConfig) context.mock(ServletConfig.class);
+            final SampleServlet sampleServlet = new SampleServlet();
+            sampleServlet.init(servletConfigMock);
+            sampleServlet.doGet(mockHttpServletRequest, mockHttpServletResponse);
+
+            /*
+             * And test the result
+             */
+            String actualHTML = stringWriter.toString();
+            assertEquals("The actual output didn't match the expected output", expectedHTML,actualHTML);
+
+        }
+        catch (Exception ex) {
+            assertTrue("An exception occurred",false);
+        }
+
+    }
+
+}
+SAMPLE_JAVA_SERVLET_TEST_TEMPLATE
+
 SAMPLE_JAVA_SERVLET_WEB_XML_CONTENTS=<<SAMPLE_JAVA_SERVLET__WEB_XML_TEMPLATE
 <!DOCTYPE web-app PUBLIC
  "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
@@ -1019,6 +1178,7 @@ class EEJar
       create_sample_java_test_file
     elsif @executable_type == :war
       create_sample_java_servlet_file
+      create_sample_java_servlet_test_file
       create_sample_web_xml_file
     elsif @executable_type == :springwar
       
@@ -1063,6 +1223,20 @@ class EEJar
       java_file.puts java
     end
   end
+
+  def create_sample_java_servlet_test_file
+    java = SAMPLE_JAVA_SERVLET_TEST_CONTENTS
+    java = java.gsub(/\[COPYRIGHT_MESSAGE\]/,DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE)
+    java = java.gsub(/\[PACKAGE\]/,@package)
+    java = java.gsub(/\[ARTIFACT_VERSION\]/,@artifact_version)
+    package_dir = @package.gsub(/\./,'/')
+    java_file_name = File.join(@starting_dir,@artifact_id,'/src/test/java',package_dir,'SampleServletTest.java')
+    debug("Creating #{java_file_name}")
+    File.open(java_file_name,'w') do |java_file|
+      java_file.puts java
+    end
+  end
+
 
   def create_sample_web_xml_file
     xml = SAMPLE_JAVA_SERVLET_WEB_XML_CONTENTS
