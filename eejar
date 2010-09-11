@@ -5,7 +5,14 @@
 
 require 'fileutils'
 
-NO_BANNER=false
+# For testing use only
+# NO_BANNER default is true
+NO_BANNER=true
+# FORCE_EXECUTABLE_TYPE should be commented out by default
+FORCE_EXECUTABLE_TYPE=:war
+# FORCE_DEBUG should be commented out by default
+FORCE_DEBUG=true
+# Section For testing use only
 
 if __FILE__ =~ /eejar/
   executable_type = :jar
@@ -16,6 +23,9 @@ elsif __FILE__ =~ /eewar/
 elsif __FILE__ =~ /eespringwar/
   executable_type = :springwar
   executable_name = 'eespringwar'
+end
+if defined?(FORCE_EXECUTABLE_TYPE)
+  executable_type=FORCE_EXECUTABLE_TYPE
 end
 EXECUTABLE_TYPE=executable_type
 EXECUTABLE_NAME=executable_name
@@ -140,13 +150,53 @@ DEFAULT_PROJECT_DIRECTORIES = %w{
   /src/main/resources
   /src/test
   /src/test/java
+  /src/test/resources
+}
+
+DEFAULT_WAR_PROJECT_DIRECTORIES = %w{
+  /src/main/webapp
+  /src/main/webapp/META-INF
+  /src/main/webapp/WEB-INF
+  /src/main/webapp/images
+  /src/main/webapp/javascript
+  /src/main/webapp/stylesheets
+  
 }
 
 PACKAGE_SPECIFIC_DIRECTORIES = %w{
   /src/main/java/[PACKAGE]
   /src/main/resources/[PACKAGE]
   /src/test/java/[PACKAGE]
+  /src/test/resources/[PACKAGE]
 }
+
+
+STANDARD_GIT_IGNORE_CONTENTS=<<STANDARD_GIT_IGNORE_TEMPLATE
+.DS_Store
+logs
+logs/*
+target
+target/*
+.idea/workspace.xml
+.idea/tasks.xml
+projectFilesBackup*
+projectFilesBackup*/*
+STANDARD_GIT_IGNORE_TEMPLATE
+
+JAR_GIT_IGNORE_CONTENTS=<<JAR_GIT_IGNORE_TEMPLATE
+Sample.java
+SampleTest.java
+JAR_GIT_IGNORE_TEMPLATE
+
+WAR_GIT_IGNORE_CONTENTS=<<WAR_GIT_IGNORE_TEMPLATE
+SampleServlet.java
+SampleServletTest.java
+WAR_GIT_IGNORE_TEMPLATE
+
+SPRINGWAR_GIT_IGNORE_CONTENTS=<<SPRINGWAR_GIT_IGNORE_TEMPLATE
+SampleServlet.java
+SampleServletTest.java
+SPRINGWAR_GIT_IGNORE_TEMPLATE
 
 EEPROPERTIES_FILE_NAMES=%w{defaults-ee.properties development-ee.properties test-ee.properties}
 
@@ -262,19 +312,7 @@ POM_CONTENTS_JAR=<<POM_TEMPLATE_JAR
 </project>
 POM_TEMPLATE_JAR
 
-GIT_IGNORE_CONTENTS=<<GITIGNORE_TEMPLATE
-.DS_Store
-logs
-logs/*
-target
-target/*
-.idea/workspace.xml
-.idea/tasks.xml
-projectFilesBackup*
-projectFilesBackup*/*
-Sample.java
-SampleTest.java
-GITIGNORE_TEMPLATE
+
 
 SAMPLE_JAVA_CONTENTS=<<SAMPLE_JAVA_TEMPLATE
 [COPYRIGHT_MESSAGE]
@@ -428,11 +466,20 @@ SPRINGWAR_RUN_INSTRUCTIONS_TEMPLATE
 
 EXECUTABLE_TYPE_INFO = {
   :jar => {:project_description => 'JAR-based Maven Project',
-           :run_instructions => JAR_RUN_INSTRUCTIONS},
+           :run_instructions => JAR_RUN_INSTRUCTIONS,
+           :default_directories => DEFAULT_PROJECT_DIRECTORIES,
+           :project_specific_directories => nil,
+           :additional_git_ignore_files => JAR_GIT_IGNORE_CONTENTS},
   :war => {:project_description => 'servlet (WAR) Maven Project',
-           :run_instructions => WAR_RUN_INSTRUCTIONS},
+           :run_instructions => WAR_RUN_INSTRUCTIONS,
+           :default_directories => DEFAULT_PROJECT_DIRECTORIES,
+           :project_specific_directories => DEFAULT_WAR_PROJECT_DIRECTORIES,
+           :additional_git_ignore_files => WAR_GIT_IGNORE_CONTENTS},
   :springwar => {:project_description => 'Spring MVC WAR-based Maven Project',
-           :run_instructions => SPRINGWAR_RUN_INSTRUCTIONS}
+           :run_instructions => SPRINGWAR_RUN_INSTRUCTIONS,
+           :default_directories => DEFAULT_PROJECT_DIRECTORIES,
+           :project_specific_directories => DEFAULT_WAR_PROJECT_DIRECTORIES,
+           :additional_git_ignore_files => SPRINGWAR_GIT_IGNORE_CONTENTS },
 }
 
 class EEJar
@@ -448,11 +495,13 @@ class EEJar
   
   def initialize
     @debug = false
+    @debug = FORCE_DEBUG if defined?(FORCE_DEBUG)
+    
     @starting_dir = Dir.getwd
     if @debug
       @starting_dir = File.join(@starting_dir,'debug')
     end
-    
+    @executable_info = EXECUTABLE_TYPE_INFO[EXECUTABLE_TYPE]
   end
   
   def debug(msg)
@@ -471,11 +520,10 @@ class EEJar
   def display_banner
     quiet_mode = ARGV.detect{|arg| arg =~ /-q/}
     if quiet_mode.nil? and (not NO_BANNER)
-      executable_info = EXECUTABLE_TYPE_INFO[EXECUTABLE_TYPE]
       banner = BANNER.gsub(/\[EXECUTABLE_NAME\]/,EXECUTABLE_NAME)
-      project_description = executable_info[:project_description]
+      project_description = @executable_info[:project_description]
       banner = banner.gsub(/\[PROJECT_DESCRIPTION\]/,project_description)
-      run_instructions = executable_info[:run_instructions]
+      run_instructions = @executable_info[:run_instructions]
       banner = banner.gsub(/\[RUN_INSTRUCTIONS\]/,run_instructions)
       puts banner
     end
@@ -508,10 +556,19 @@ class EEJar
     # Clean out existing directory
     delete_tree_with_prompt(File.join(@starting_dir,@artifact_id))
     # Create standard directories
-    DEFAULT_PROJECT_DIRECTORIES.each do |relative_directory|
+    default_directories = @executable_info[:default_directories]
+    default_directories.each do |relative_directory|
       qualified_directory = File.join(@starting_dir,@artifact_id,relative_directory)
       debug("About to create " + qualified_directory)
       FileUtils.mkdir_p(qualified_directory)
+    end
+    project_specific_directories = @executable_info[:project_specific_directories]
+    if project_specific_directories
+      project_specific_directories.each do |relative_directory|
+        qualified_directory = File.join(@starting_dir,@artifact_id,relative_directory)
+        debug("About to create " + qualified_directory)
+        FileUtils.mkdir_p(qualified_directory)
+      end
     end
     # Create package-specific directories
     PACKAGE_SPECIFIC_DIRECTORIES.each do |partial_package_directory|
@@ -520,7 +577,6 @@ class EEJar
       debug("About to create " + qualified_directory)
       FileUtils.mkdir_p(qualified_directory)
     end
-    
   end
   
   def delete_tree_with_prompt(root_dir)
@@ -536,6 +592,7 @@ class EEJar
   
   def create_project_files
     create_gitignore
+    exit # DEBUG
     create_pom
     create_placeholder_files
     create_configuration_files
@@ -546,7 +603,11 @@ class EEJar
     git_ignore_file_name = File.join(@starting_dir,@artifact_id,".gitignore")
     debug("Creating #{git_ignore_file_name}")
     File.open(git_ignore_file_name,'w') do |git_ignore_file|
-      git_ignore_file.puts GIT_IGNORE_CONTENTS
+      git_ignore_file.puts STANDARD_GIT_IGNORE_CONTENTS
+      additional_git_ignore_files = @executable_info[:additional_git_ignore_files]
+      if additional_git_ignore_files
+        git_ignore_file.puts additional_git_ignore_files  
+      end
     end
   end
   
