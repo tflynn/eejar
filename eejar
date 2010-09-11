@@ -5,40 +5,41 @@
 
 require 'fileutils'
 
-=begin
+NO_BANNER=false
 
-Title eejar
-Version 1.0
-Author Tracy Flynn
-Date 20100909
+if __FILE__ =~ /eejar/
+  executable_type = :jar
+  executable_name = 'eejar'
+elsif __FILE__ =~ /eewar/
+  executable_type = :war
+  executable_name = 'eewar'
+elsif __FILE__ =~ /eespringwar/
+  executable_type = :springwar
+  executable_name = 'eespringwar'
+end
+EXECUTABLE_TYPE=executable_type
+EXECUTABLE_NAME=executable_name
 
-eejar is a script that will create a skeleton for a single JAR-based Maven Project.
-
-In addition to the results of a suitable 'mvn archetype:generate' for the archetype 'maven-archetype-quickstart' (1.1),
-the script will add configuration and logging configuration based on EEProperties and Slf4jExt respsectively.
-
-See 
-
-http://olioinfo.net/javadocs/eeproperties/2.8/index.html
-http://olioinfo.net/javadocs/Slf4jExt/2.5/index.html
-
-=end
 
 DESCRIPTION_TEXT=<<DESCRIPTION_TEXT_TEMPLATE
 Overview
 --------
 
-eejar is a script that will create a skeleton for a single JAR-based Maven Project.
+[EXECUTABLE_NAME] is a script that will create a skeleton for a single [PROJECT_DESCRIPTION].
 
 It uses the same concepts as a Maven archetype - groupID, artifactID and so on.
 
-In addition to the results of a suitable 'mvn archetype:generate' for the archetype 'maven-archetype-quickstart' (1.1),
-the script will add configuration and logging configuration based on EEProperties and Slf4jExt respsectively.
+In addition to the effective results of 'mvn archetype:generate' for a suitable archetype,
+the script will add:
+
+- Configuration and logging settings using EEProperties and Slf4jExt
+- Other artifacts suitable to the type of project
+- Sample code sufficient to create a runnable application
 
 To run
 ------
 
-./eejar
+./#{EXECUTABLE_NAME}
 
 and respond to the prompts, or accept the defaults offered.
 
@@ -46,7 +47,7 @@ Options:
 
 -q quiet mode - Disable this message
 
-Test outputs with
+Testing the result
 -----------------
 
 Example is for groupId 'com.example', artifact 'sampleproduct' and package  'com.example.sampleproduct'
@@ -57,11 +58,9 @@ cd sampleproduct
 
 mvn package
 
-Then issue a command similar to:
+[RUN_INSTRUCTIONS]
 
-java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
-
-See:also
+See also
 --------
 
 http://olioinfo.net/javadocs/eeproperties/2.8/index.html
@@ -111,18 +110,21 @@ DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
 # End editing defaults - Do not edit below this point
 #####
 
-EEJAR_TITLE='eejar'
-EEJAR_VERSION_MAJOR=1
+EEJAR_TITLE=EXECUTABLE_NAME
+EEJAR_VERSION_MAJOR=2
 EEJAR_VERSION_MINOR=0
 EEJAR_VERSION="#{EEJAR_VERSION_MAJOR}.#{EEJAR_VERSION_MINOR}"
 EEJAR_AUTHOR='Tracy Flynn'
-EEJAR_VERSION_DATE='2010-09-09'
-EEJAR_COPYRIGHT='Copyright (c) 2010 Tracy Flynn - All rights reserved'
+EEJAR_VERSION_DATE='2010-09-11'
+EEJAR_COPYRIGHT='Copyright (c) 2009-2010 Tracy Flynn - All rights reserved'
 EEJAR_DISTRIBUTION='May be distributed under the same terms as Ruby'
 
 BANNER=<<BANNER_TEMPLATE
 
-#{EEJAR_TITLE} #{EEJAR_VERSION} #{EEJAR_AUTHOR}
+Title: #{EEJAR_TITLE} 
+Version: #{EEJAR_VERSION} 
+Author: #{EEJAR_AUTHOR}
+
 #{EEJAR_COPYRIGHT}
 #{EEJAR_DISTRIBUTION}
 
@@ -402,6 +404,36 @@ log4j.appender.[PACKAGE].CONSOLE_APPENDER.layout.ConversionPattern=%d{ISO8601}\t
 log4j.logger.[PACKAGE] = DEBUG, [PACKAGE].CONSOLE_APPENDER
 LOG4J_TEST_TEMPLATE
 
+JAR_RUN_INSTRUCTIONS=<<JAR_RUN_INSTRUCTIONS_TEMPLATE
+Then issue a command similar to:
+
+java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
+JAR_RUN_INSTRUCTIONS_TEMPLATE
+
+WAR_RUN_INSTRUCTIONS=<<WAR_RUN_INSTRUCTIONS_TEMPLATE
+Then issue a command similar to:
+
+Don't know yet
+
+java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
+WAR_RUN_INSTRUCTIONS_TEMPLATE
+
+SPRINGWAR_RUN_INSTRUCTIONS=<<SPRINGWAR_RUN_INSTRUCTIONS_TEMPLATE
+Then issue a command similar to:
+
+Don't know yet Spring
+
+java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
+SPRINGWAR_RUN_INSTRUCTIONS_TEMPLATE
+
+EXECUTABLE_TYPE_INFO = {
+  :jar => {:project_description => 'JAR-based Maven Project',
+           :run_instructions => JAR_RUN_INSTRUCTIONS},
+  :war => {:project_description => 'servlet (WAR) Maven Project',
+           :run_instructions => WAR_RUN_INSTRUCTIONS},
+  :springwar => {:project_description => 'Spring MVC WAR-based Maven Project',
+           :run_instructions => SPRINGWAR_RUN_INSTRUCTIONS}
+}
 
 class EEJar
   
@@ -438,8 +470,14 @@ class EEJar
   
   def display_banner
     quiet_mode = ARGV.detect{|arg| arg =~ /-q/}
-    if quiet_mode.nil?
-      puts BANNER
+    if quiet_mode.nil? and (not NO_BANNER)
+      executable_info = EXECUTABLE_TYPE_INFO[EXECUTABLE_TYPE]
+      banner = BANNER.gsub(/\[EXECUTABLE_NAME\]/,EXECUTABLE_NAME)
+      project_description = executable_info[:project_description]
+      banner = banner.gsub(/\[PROJECT_DESCRIPTION\]/,project_description)
+      run_instructions = executable_info[:run_instructions]
+      banner = banner.gsub(/\[RUN_INSTRUCTIONS\]/,run_instructions)
+      puts banner
     end
   end
   

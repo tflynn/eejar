@@ -4,7 +4,25 @@ eejar
 Utility to create a Maven-based project skeleton for a Jar with additional configuration,
 logging and other support automatically configured.
 
-To run:
+Prerequisites
+-------------
+
+An installed copy of Ruby to generate the project skeleton.
+
+An installed copy of Maven 2.x to test the project
+
+To run
+------
+
+For a Jar-based project:
 
 ./eejar
+
+For a simple servlet-based (WAR) project:
+
+./eewar
+
+For a SpringMVC-based (WAR) project:
+
+./eespringwar
 
