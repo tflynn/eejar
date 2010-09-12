@@ -55,9 +55,9 @@ DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
 # NO_BANNER default is false
 NO_BANNER=false
 # FORCE_EXECUTABLE_TYPE should be commented out by default
-FORCE_EXECUTABLE_TYPE=:war
+# FORCE_EXECUTABLE_TYPE=:war
 # FORCE_DEBUG should be commented out by default
-#FORCE_DEBUG=false
+# FORCE_DEBUG=false
 # For testing use only ends
 
 if __FILE__ =~ /eejar/
