@@ -55,7 +55,7 @@ DEFAULT_SOURCE_CODE_COPYRIGHT_MESSAGE_TEMPLATE
 # NO_BANNER default is false
 NO_BANNER=false
 # FORCE_EXECUTABLE_TYPE should be commented out by default
-#FORCE_EXECUTABLE_TYPE=:war
+FORCE_EXECUTABLE_TYPE=:war
 # FORCE_DEBUG should be commented out by default
 #FORCE_DEBUG=false
 # For testing use only ends
@@ -989,6 +989,21 @@ Don't know yet Spring
 java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
 SPRINGWAR_RUN_INSTRUCTIONS_TEMPLATE
 
+WAR_RUNIT_CONTENTS=<<WAR_RUNIT_TEMPLATE
+#!/usr/bin/env ruby
+mvn_cmd = \%\{mvn jetty:run >/dev/null &\}
+\`\#\{mvn_cmd\}\`
+#TODO loop to detect when jetty is running
+Kernel.sleep(10)
+browser_cmd = \%\{open http://localhost:8080/sample\}
+\`\#\{browser_cmd\}\`
+Kernel.sleep(3)
+maven_ps = \`ps alwwwx | grep -v grep | grep jetty\`
+maven_pid = maven_ps.split[1].strip.chomp
+kill_cmd = \"kill -9 \#\{maven_pid\}\"
+\`\#\{kill_cmd\}\`
+WAR_RUNIT_TEMPLATE
+
 EXECUTABLE_TYPE_INFO = {
   :jar => {:project_description => 'JAR-based Maven Project',
            :run_instructions => JAR_RUN_INSTRUCTIONS,
@@ -1275,16 +1290,13 @@ class EEJar
     #java -cp ./target/sampleproduct-1.0-jar-with-dependencies.jar  com.example.sampleproduct.Sample
     run_file_name = File.join(@starting_dir,@artifact_id,'bin','runit')
     File.open(run_file_name,'w') do |file|
-      file.puts "#!/usr/bin/env bash"
       if @executable_type == :jar
+        file.puts "#!/usr/bin/env bash"
         cmd = %{\nmvn package >/dev/null\njava -cp ./target/#{@artifact_id}-#{@artifact_version}-jar-with-dependencies.jar  #{@package}.Sample}
       elsif @executable_type == :war
-        cmd = %{mvn jetty:run >/dev/null &}
-        if Config::CONFIG["host_os"] =~ /darwin/
-          cmd = cmd + %{\nsleep 10\nopen http://localhost:8080/#{@executable_info[:pom_build_name]}}
-        end
+        cmd = WAR_RUNIT_CONTENTS
       elsif @executable_type == :springwar
-      
+        file.puts "#!/usr/bin/env bash"
       end
       file.puts cmd
     end
