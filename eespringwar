@@ -13,8 +13,13 @@ require 'rbconfig'
 DEFAULT_GROUP_ID='net.olioinfo'
 DEFAULT_ARTIFACT_VERSION='1.0'
 
-#SOURCE_CODE_AUTHOR=`echo $LOGNAME`.strip.chomp
-SOURCE_CODE_AUTHOR='Tracy Flynn'
+author_name = `echo $LOGNAME`.strip.chomp
+cmd_result = `which git`
+cmd_status = $?
+if cmd_status == 0
+  author_name=`git config --get user.name`.strip.chomp
+end  
+SOURCE_CODE_AUTHOR=author_name
 
 POM_DEPENDENCY_JUNIT_VERSION='4.8.1'
 POM_DEPENDENCY_SLF4J_JCL_OVER_SLF4J_VERSION='1.5.8'
@@ -977,7 +982,9 @@ cd [artifact_dir]
 where 'artifact_dir' is the directory containing the artifact you've just created.
 
 If you're running under OS X you, after about 10 seconds, you should see the browser
-open with a web page indicating success.
+open with a web page indicating success. 
+
+The Jetty instance running the application will be killed automatically after the page is displayed.
 
 WAR_RUN_INSTRUCTIONS_TEMPLATE
 
